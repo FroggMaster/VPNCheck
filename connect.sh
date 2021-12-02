@@ -1,2 +1,2 @@
 #!/bin/sh
-sudo openvpn --config /home/frog/VPNCheck/Home.ovpn --ping-restart 60
+sudo openvpn --config $HOME/VPNCheck/Connection.ovpn --ping-restart 60
