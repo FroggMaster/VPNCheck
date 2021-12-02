@@ -1,0 +1,11 @@
+# PID Files are constantly changing and will be generated automatically by the VPNCheck
+vpncheck.pid
+
+# Old / Backup copy that I have yet to remove
+vpncheck.old
+
+# My Personal Connection File, I'd rather not upload to GitHub
+Home.ovpn
+
+# The Logs Folder
+logs/
