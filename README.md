@@ -1,6 +1,6 @@
 # VPNCheck
 
-Foobar is a Python library for dealing with word pluralization.
+VPNCheck is designed to initiate an OpenVPN connection and maintain that connection. 
 
 ## Installation
 
