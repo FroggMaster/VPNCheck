@@ -1,6 +1,7 @@
 # VPNCheck
 
-VPNCheck is designed to initiate an OpenVPN connection and maintain that connection. 
+VPNCheck is designed to initiate an OpenVPN connection and maintain that connection.
+Well I would love to rely on the built-in OpenVPN method to maintain a connection I've found it to be unreliable.
 
 ## Installation
 
