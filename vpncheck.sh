@@ -67,7 +67,7 @@ PIDFILE="./vpncheck.pid"
 echo "$$" > "$PIDFILE"
 
 # Check if OpenVPN is running on the specified interface
-if ifconfig $INTERFACE &> /dev/null ; then
+if ifconfig $INTERFACE > /dev/null 2>&1; then
     # OpenVPN is running on the interface
     echo -e "${YELLOW}$(date "$DATE_FORMAT") [${GREEN}SUCCESS${RESET}${YELLOW}]${GREEN} - OpenVPN is running on $INTERFACE!${RESET}"
     echo "$(date "$DATE_FORMAT") [SUCCESS] - OpenVPN is running on $INTERFACE!" >> $LOGFILE
