@@ -1,90 +1,56 @@
-#!/bin/bash
-## Script designed to check if OpenVPN has failed and re-run the connection script
-## Frog / Domenico Costanzo
-## Possible CRON Job: */1 * * * * /bin/bash $HOME/VPNCheck/vpncheck.sh > $HOME/VPNCheck/logs/cron.log
+#!/bin/sh
 
-## Define Variables
-## The Date (Year-Month-Day / Hour-Minute-Second)
-Date=`date "+%a %b %d %H:%M:%S %Y %Z"`
-## Grep to verify if tun0 is found -cs outputs a 0 or 1 depending on if match is found
-TunnelStatus=$(ifconfig|grep -cs tun0)
-## PID / LOCK File
-PIDFILE=$HOME/VPNCheck/vpncheck.pid
-## COLORS
-reset=`tput sgr0`
-red=`tput setaf 1`
-green=`tput setaf 2`
-yellow=`tput setaf 3`
+# Define the name of the OpenVPN interface and the connection script
+INTERFACE="tun0"
+CONNECTSCRIPT="/path/to/connection/script.sh"
 
-## Cleanup TPUT From Logs
-## When TPUT is outputted in the logs, the color cods are present
-## In addition to this, sgr0 output is also displayed, the below SED command will clear this from the logs
-cleanup_tput() {
-  sed -i 's/\x1b\[[0-9;]*m\|\x1b[(]B\x1b\[m//g' ./logs/vpncheck.log
-}
+# Define the log file and maximum log size in MB
+LOGFILE="./vpncheck.log"
+MAXLOGSIZE=50
 
-## Trap to Cleanup if manually terminated
-## When manually terminated if there is no TRAP the PID file does not always get cleaned up.
-trap "{ rm $PIDFILE > /dev/null 2>&1; }" SIGINT
+# Define date format
+DATE_FORMAT='+%Y-%m-%d %H:%M:%S'
 
-if [ -f $PIDFILE ]
-then
-  PID=$(cat $PIDFILE)
-  ps -p $PID > /dev/null 2>&1
-  if [ $? -eq 0 ]
-  then
-    echo $Date "| ${yellow}WARN:${reset} VPNCheck Process already running"| tee -a ./logs/vpncheck.log && $(cleanup_tput)
-        if [[ $TunnelStatus == 1 ]]
-        then
-			## Catpured the number of dropped packets and assign it to a variable
-			## Using GREP and Regex to filter ifconfig on tun0 
-			dpc=`ifconfig|grep -i tun0 -A 8|grep -i TX|grep -oP "dropped [\d]+"|grep -oP "[\d]+"`
-            if [[ $dpc -ge 100 ]]; then
-				echo $Date "| ${red}ERROR:${reset} Dropped packets are currently at ${red}$dpc${reset}"| tee -a ./logs/vpncheck.log && $(cleanup_tput)
-				echo $Date "| ${yellow}WARN:${reset} Attempting reconnect to VPN" | tee -a ./logs/vpncheck.log && $(cleanup_tput)
-				echo $Date "| ${yellow}WARN:${reset} Killing OpenVPN connections" | tee -a ./logs/vpncheck.log && $(cleanup_tput)
-				sudo killall openvpn			
-				$HOME/VPNCheck/connect.sh | tee -a ./logs/vpncheck.log
-			else
-				echo $Date "| ${green}SUCCESS:${reset} OpenVPN Tunnel on tun0 is connected! =D Huzzah!" | tee -a ./logs/vpncheck.log && $(cleanup_tput)
-				find $HOME/VPNCheck/logs/vpncheck.log -size +50M -delete > /dev/null 2>&1;
-				exit 0
-			fi
-        fi
+# Define colors
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+YELLOW='\033[0;33m'
+RESET='\033[0m'
+
+# Check if another instance of this script is already running
+PIDFILE=./vpncheck.pid
+if [ -f "$PIDFILE" ] && ps -p $(cat $PIDFILE) > /dev/null; then
+    echo "Another instance of this script is already running, exiting..."
     exit 1
-  else
-    ## Process not found assume not running
+else
     echo $$ > $PIDFILE
-    if [ $? -ne 0 ]
-    then
-      echo $Date "| ${red}ERROR:${reset} Could not create PID file" | tee -a ./logs/vpncheck.log && $(cleanup_tput)
-      exit 1
-    fi
-  fi
-else
-  echo $$ > $PIDFILE
-  if [ $? -ne 0 ]
-  then
-    echo $Date "| ${red}ERROR:${reset} Could not create PID file" | tee -a ./logs/vpncheck.log && $(cleanup_tput)
-    exit 1
-  fi
 fi
 
-## Check to see if tunnel is running, if not restart the tunnel
-## If the tunnel is running log this attempt then review the log, if it's over 50MB remove the log
-if [[ $TunnelStatus == 0 ]]
-then
-        echo $Date "| ${red}ERROR:${reset} tun0 is not connected. ;~ ;" | tee -a ./logs/vpncheck.log && $(cleanup_tput)
-        echo $Date "| ${yellow}WARN:${reset} Attempting reconnect to VPN" | tee -a ./logs/vpncheck.log && $(cleanup_tput)
-        $HOME/VPNCheck/connect.sh | tee -a ./logs/vpncheck.log
+# Function to remove the PID file on exit
+cleanup() {
+    rm -f $PIDFILE
+    exit
+}
+trap cleanup EXIT
+
+# Check if OpenVPN is running on the specified interface
+if ifconfig $INTERFACE &> /dev/null ; then
+    # OpenVPN is running on the interface
+    echo -e "${YELLOW}$(date "$DATE_FORMAT") [${GREEN}SUCCESS${RESET}${YELLOW}]${GREEN} - OpenVPN is running on $INTERFACE!${RESET}"
+    echo "$(date "$DATE_FORMAT") [SUCCESS] - OpenVPN is running on $INTERFACE!" >> $LOGFILE
 else
-        echo $Date "| ${green}SUCCESS:${reset} OpenVPN Tunnel on tun0 is connected! =D Huzzah!" | tee -a ./logs/vpncheck.log && $(cleanup_tput)
-        find $HOME/VPNCheck/logs/vpncheck.log -size +50M -delete > /dev/null 2>&1;
-        exit 0
+    # OpenVPN is not running on the interface
+    echo -e "${YELLOW}$(date "$DATE_FORMAT") [${RED}FAILED${RESET}${YELLOW}]${RED} - OpenVPN is not running on $INTERFACE!${RESET}"
+    echo "$(date "$DATE_FORMAT") [FAILED] - OpenVPN is not running on $INTERFACE!" >> $LOGFILE
+
+    # Restart the connection
+    echo "Restarting OpenVPN connection..."
+    $CONNECTSCRIPT
 fi
 
-## Cleanup the PID File
-## Runs on SIGINT HARD but there is a TRAP above just incase
-## When manually terminated if there is no TRAP the PID file does not always get cleaned up.
-rm $PIDFILE > /dev/null 2>&1;
-
+# Check the size of the log file and reset it if necessary
+LOGSIZE=$(du -m $LOGFILE | cut -f1)
+if [ $LOGSIZE -gt $MAXLOGSIZE ]; then
+    echo "Resetting log file..."
+    echo "" > $LOGFILE
+fi
