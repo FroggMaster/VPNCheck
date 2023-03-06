@@ -9,14 +9,13 @@ git clone https://github.com/FroggMaster/VPNCheck.git
 ```
 
 ## Usage
-1) Add an OVPN file named Connection.ovpn file to the VPNCheck folder
+1) Defined your OVPN connection file in the CONNECTSCRIPT variable.
 2) Configure a Crontab schedule to run VPNCheck
 3) Wait for Crontab to initialize VPNCheck 
 
-
 #### Crontab Schedule (Every 1 Minute)
 ```python
-*/1 * * * * /bin/bash $HOME/VPNCheck/vpncheck.sh > $HOME/VPNCheck/logs/cron.log
+*/1 * * * * /bin/bash $HOME/VPNCheck/vpncheck.sh
 ```
 
 # Example OVPN
