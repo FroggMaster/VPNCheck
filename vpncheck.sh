@@ -27,7 +27,7 @@ while getopts "c:" opt; do
             printf 'CONNECTSCRIPT="%s"\n' "$OPTARG" >> "$CONFIG_FILE"
             ;;
         \? )
-            echo "Invalid option: -$OPTARG" 1>&2
+            echo "Usage: $0 -c /path/to/connect.sh"
             exit 1
             ;;
     esac
@@ -49,13 +49,16 @@ fi
 
 # Check if the OpenVPN connection script is executable
 if ! [ -x "$CONNECTSCRIPT" ]; then
-    echo "The OpenVPN connection script at $CONNECTSCRIPT is not executable, please make it executable and try again."
+    echo -e "${YELLOW}$(date "$DATE_FORMAT") [${RED}ERROR${RESET}${YELLOW}]${RED} - The OpenVPN connection script at $CONNECTSCRIPT is not executable, please make it executable and try again.${RESET}"
+    echo "$(date "$DATE_FORMAT") [ERROR] - The OpenVPN connection script at $CONNECTSCRIPT is not executable, please make it executable and try again." >> $LOGFILE
+
     exit 1
 fi
 
 # Check if another instance of this script is already running
 if [ -f "$PIDFILE" ]; then
-    echo "Another instance of this script is already running, exiting..."
+    echo -e "${YELLOW}$(date "$DATE_FORMAT") [${RED}ERROR${RESET}${YELLOW}]${RED} - Another instance of this script is already running, exiting...${RESET}"
+    echo "$(date "$DATE_FORMAT") [ERROR] - Another instance of this script is already running, exiting..." >> $LOGFILE
     exit 1
 fi
 
@@ -70,8 +73,8 @@ if ifconfig $INTERFACE &> /dev/null ; then
     echo "$(date "$DATE_FORMAT") [SUCCESS] - OpenVPN is running on $INTERFACE!" >> $LOGFILE
 else
     # OpenVPN is not running on the interface
-    echo -e "${YELLOW}$(date "$DATE_FORMAT") [${RED}FAILED${RESET}${YELLOW}]${RED} - OpenVPN is not running on $INTERFACE!${RESET}"
-    echo "$(date "$DATE_FORMAT") [FAILED] - OpenVPN is not running on $INTERFACE!" >> $LOGFILE
+    echo -e "${YELLOW}$(date "$DATE_FORMAT") [${RED}ERROR${RESET}${YELLOW}]${RED} - OpenVPN is not running on $INTERFACE!${RESET}"
+    echo "$(date "$DATE_FORMAT") [ERROR] - OpenVPN is not running on $INTERFACE!" >> $LOGFILE
 
     # Restart the connection
     echo "Restarting OpenVPN connection..."
