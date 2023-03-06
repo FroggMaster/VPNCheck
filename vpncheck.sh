@@ -24,7 +24,15 @@ while getopts "c:" opt; do
     case ${opt} in
         c )
             CONNECTSCRIPT="$OPTARG"
-            printf 'CONNECTSCRIPT="%s"\n' "$OPTARG" >> "$CONFIG_FILE"
+            # Check if the provided config file is executable
+            if [ -x "$CONNECTSCRIPT" ]; then
+                printf 'CONNECTSCRIPT="%s"\n' "$OPTARG" >> "$CONFIG_FILE"
+            else
+                echo -e "${YELLOW}$(date "$DATE_FORMAT") [${RED}ERROR${RESET}${YELLOW}]${RED} - The OpenVPN connection script at $CONNECTSCRIPT is not executable, please make it executable and try again.${RESET}"
+                echo "$(date "$DATE_FORMAT") [ERROR] - The OpenVPN connection script at $CONNECTSCRIPT is not executable, please make it executable and try again." >> $LOGFILE
+
+                exit 1
+            fi
             ;;
         \? )
             echo "Usage: $0 -c /path/to/connect.sh"
