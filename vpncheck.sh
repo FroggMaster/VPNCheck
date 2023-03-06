@@ -93,7 +93,7 @@ else
     echo "$(date "$DATE_FORMAT") [ERROR] - OpenVPN is not running on $INTERFACE!" >> $LOGFILE
 
     # Restart the connection
-	echo -e "${YELLOW}$(date "$DATE_FORMAT") [${GREEN}WARN${RESET}${YELLOW}]${GREEN} - Restarting OpenVPN connection...${RESET}"
+	echo -e "${YELLOW}$(date "$DATE_FORMAT") [${RED}WARN${RESET}${YELLOW}]${GREEN} - Restarting OpenVPN connection...${RESET}"
     echo "$(date "$DATE_FORMAT") [WARN] - Restarting OpenVPN connection..." >> $LOGFILE
     $CONNECTSCRIPT
 fi
