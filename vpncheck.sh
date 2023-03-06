@@ -3,9 +3,21 @@
 # Define the name of the OpenVPN interface
 INTERFACE="tun0"
 
+# Get the directory name of the script
+SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
+
+# Change working directory to the script directory
+cd "$SCRIPT_DIR"
+
 # Define the log file and maximum log size in MB
-LOGFILE="./vpncheck.log"
+LOGFILE="$SCRIPT_DIR/vpncheck.log"
 MAXLOGSIZE=50
+
+# Define config file path
+CONFIG_FILE="$SCRIPT_DIR/config.ini"
+
+# Define the PID File
+PIDFILE="$SCRIPT_DIR/vpncheck.pid"
 
 # Define date format
 DATE_FORMAT='+%Y-%m-%d %H:%M:%S'
@@ -15,9 +27,6 @@ GREEN='\033[0;32m'
 RED='\033[0;31m'
 YELLOW='\033[0;33m'
 RESET='\033[0m'
-
-# Define config file path
-CONFIG_FILE="./config.ini"
 
 # Get the connection script path from command line argument if provided
 while getopts "c:" opt; do
@@ -71,7 +80,6 @@ if [ -f "$PIDFILE" ]; then
 fi
 
 # Save the current process ID to a file
-PIDFILE="./vpncheck.pid"
 echo "$$" > "$PIDFILE"
 
 # Check if OpenVPN is running on the specified interface
@@ -85,7 +93,8 @@ else
     echo "$(date "$DATE_FORMAT") [ERROR] - OpenVPN is not running on $INTERFACE!" >> $LOGFILE
 
     # Restart the connection
-    echo "Restarting OpenVPN connection..."
+	echo -e "${YELLOW}$(date "$DATE_FORMAT") [${GREEN}WARN${RESET}${YELLOW}]${GREEN} - Restarting OpenVPN connection...${RESET}"
+    echo "$(date "$DATE_FORMAT") [WARN] - Restarting OpenVPN connection..." >> $LOGFILE
     $CONNECTSCRIPT
 fi
 
