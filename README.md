@@ -17,6 +17,10 @@ git clone https://github.com/FroggMaster/VPNCheck.git
 ```python
 */1 * * * * /bin/bash $HOME/VPNCheck/vpncheck.sh
 ```
+#### Debug Crontab Schedule (Every 1 Minute + STDERR and STDOUT)
+```python
+*/1 * * * * cd $HOME/VPNCheck ; $HOME/VPNCheck/vpncheck.sh >> $HOME/VPNCheck/cronlog.log 2>&1
+```
 
 # Example OVPN
 ```
