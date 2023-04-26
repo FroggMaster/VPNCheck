@@ -11,7 +11,7 @@ git clone https://github.com/FroggMaster/VPNCheck.git
 ```
 
 ## Usage
-1) Defined your OVPN connection file in the CONNECTSCRIPT variable.
+1) Define your OVPN connection file in the CONNECTSCRIPT variable.
 2) Configure a Crontab schedule to run VPNCheck
 3) Wait for Crontab to initialize VPNCheck 
 
